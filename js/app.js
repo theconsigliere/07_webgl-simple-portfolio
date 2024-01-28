@@ -4,6 +4,7 @@ import vertex from "./shader/vertex.glsl"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import gui from "lil-gui"
 import gsap from "gsap"
+import image from "../img/texture.jpg"
 
 export default class Sketch {
   constructor(options) {
@@ -20,7 +21,7 @@ export default class Sketch {
     this.container.appendChild(this.renderer.domElement)
 
     this.camera = new THREE.PerspectiveCamera(
-      70,
+      30,
       window.innerWidth / window.innerHeight,
       0.001,
       1000
@@ -50,6 +51,12 @@ export default class Sketch {
     //  this.gui.add(this.settings, "progress", 0, 1, 0.01)
     // add wireframe to lil gui
     this.gui.add(this.material, "wireframe")
+    this.gui
+      .add(this.material.uniforms.uPulseAmount, "value", 0, 5, 0.01)
+      .name("Pulse Strength")
+    this.gui
+      .add(this.material.uniforms.uWaveAmount, "value", 0, 5, 0.01)
+      .name("Wave Amount")
   }
 
   setupResize() {
@@ -70,16 +77,20 @@ export default class Sketch {
         derivatives: "#extension GL_OES_standard_derivatives : enable",
       },
       side: THREE.DoubleSide,
-      wireframe: true,
+      wireframe: false,
       uniforms: {
         time: { value: 1.0 },
         resolution: { value: new THREE.Vector4() },
+        uTexture: { value: new THREE.TextureLoader().load(image) },
+        uPulseAmount: { value: 1.0 },
+        uWaveAmount: { value: 1.0 },
       },
       vertexShader: vertex,
       fragmentShader: fragment,
     })
 
     this.geometry = new THREE.PlaneGeometry(0.5, 0.5, 100, 100)
+    //  this.geometry = new THREE.SphereGeometry(0.5, 30, 30)
 
     this.plane = new THREE.Mesh(this.geometry, this.material)
     this.scene.add(this.plane)
