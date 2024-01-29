@@ -21,42 +21,43 @@ export default class Sketch {
     this.container.appendChild(this.renderer.domElement)
 
     this.camera = new THREE.PerspectiveCamera(
-      30,
+      80,
       window.innerWidth / window.innerHeight,
-      0.001,
+      10,
       1000
     )
 
-    // var frustumSize = 10;
-    // var aspect = window.innerWidth / window.innerHeight;
-    // this.camera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, -1000, 1000 );
-    this.camera.position.set(0, 0, 2)
+    const cameraPosition = 600
+    this.camera.position.z = cameraPosition
+
+    // GET PERFECT ANGLE FOR PERSPECTIVE CAMERA SO WE CAN SET PIXEL SIZES IN GEOMETRY
+
+    // 1. this calculates the angle of the camera Math.atan((window.innerHeight /2) / cameraPosition))
+    // 2. convert it to degrees from radians * 180 / Math.PI
+    // 3. multiply by 2 to get the full angle
+
+    this.camera.fov =
+      2 * ((Math.atan(this.height / 2 / cameraPosition) * 180) / Math.PI)
+
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.time = 0
 
     this.isPlaying = true
-
     this.addObjects()
+    this.settings()
     this.resize()
     this.render()
     this.setupResize()
-    this.settings()
   }
 
   settings() {
-    this.settings = {
+    this.settingsParams = {
       progress: 0,
     }
     this.gui = new gui()
-    //  this.gui.add(this.settings, "progress", 0, 1, 0.01)
+    this.gui.add(this.settingsParams, "progress", 0, 1, 0.01)
     // add wireframe to lil gui
     this.gui.add(this.material, "wireframe")
-    this.gui
-      .add(this.material.uniforms.uPulseAmount, "value", 0, 5, 0.01)
-      .name("Pulse Strength")
-    this.gui
-      .add(this.material.uniforms.uWaveAmount, "value", 0, 5, 0.01)
-      .name("Wave Amount")
   }
 
   setupResize() {
@@ -82,14 +83,13 @@ export default class Sketch {
         time: { value: 1.0 },
         resolution: { value: new THREE.Vector4() },
         uTexture: { value: new THREE.TextureLoader().load(image) },
-        uPulseAmount: { value: 1.0 },
-        uWaveAmount: { value: 1.0 },
+        uProgress: { value: 1.0 },
       },
       vertexShader: vertex,
       fragmentShader: fragment,
     })
 
-    this.geometry = new THREE.PlaneGeometry(0.5, 0.5, 100, 100)
+    this.geometry = new THREE.PlaneGeometry(300, 300, 100, 100)
     //  this.geometry = new THREE.SphereGeometry(0.5, 30, 30)
 
     this.plane = new THREE.Mesh(this.geometry, this.material)
@@ -111,6 +111,7 @@ export default class Sketch {
     if (!this.isPlaying) return
     this.time += 0.05
     this.material.uniforms.time.value = this.time
+    this.material.uniforms.uProgress.value = this.settingsParams.progress
     requestAnimationFrame(this.render.bind(this))
     this.renderer.render(this.scene, this.camera)
   }
