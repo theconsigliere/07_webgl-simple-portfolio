@@ -84,6 +84,8 @@ export default class Sketch {
         resolution: { value: new THREE.Vector4() },
         uTexture: { value: new THREE.TextureLoader().load(image) },
         uProgress: { value: 1.0 },
+        uFullscreen: { value: new THREE.Vector2(this.width, this.height) },
+        uOriginal: { value: new THREE.Vector2(300, 300) },
       },
       vertexShader: vertex,
       fragmentShader: fragment,
@@ -92,8 +94,11 @@ export default class Sketch {
     this.geometry = new THREE.PlaneGeometry(300, 300, 100, 100)
     //  this.geometry = new THREE.SphereGeometry(0.5, 30, 30)
 
-    this.plane = new THREE.Mesh(this.geometry, this.material)
-    this.scene.add(this.plane)
+    this.mesh = new THREE.Mesh(this.geometry, this.material)
+    this.scene.add(this.mesh)
+
+    this.mesh.position.x = 300
+    this.mesh.rotation.z = 0.5
   }
 
   stop() {
