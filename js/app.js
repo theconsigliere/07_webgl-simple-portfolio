@@ -85,6 +85,7 @@ export default class Sketch {
         uTexture: { value: new THREE.TextureLoader().load(image) },
         uProgress: { value: 1.0 },
         uFullscreen: { value: new THREE.Vector2(this.width, this.height) },
+        uTextureSize: { value: new THREE.Vector2(100, 100) },
         uOriginal: { value: new THREE.Vector2(300, 300) },
       },
       vertexShader: vertex,
