@@ -6,6 +6,7 @@
     "prod": "rm -r node_modules/"
   },
   "dependencies": {
+    "@studio-freight/lenis": "^1.0.34",
     "gsap": "^3.12.2",
     "lil-gui": "^0.18.2",
     "three": "^0.152.2",

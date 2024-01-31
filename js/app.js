@@ -5,6 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import gui from "lil-gui"
 import gsap from "gsap"
 import image from "../img/texture.jpg"
+import Lenis from "@studio-freight/lenis"
 
 export default class Sketch {
   constructor(options) {
@@ -84,6 +85,7 @@ export default class Sketch {
         resolution: { value: new THREE.Vector4() },
         uTexture: { value: new THREE.TextureLoader().load(image) },
         uProgress: { value: 1.0 },
+        uCorners: { value: new THREE.Vector4(0, 0, 0, 0) },
         uFullscreen: { value: new THREE.Vector2(this.width, this.height) },
         uTextureSize: { value: new THREE.Vector2(100, 100) },
         uOriginal: { value: new THREE.Vector2(300, 300) },
@@ -91,6 +93,41 @@ export default class Sketch {
       vertexShader: vertex,
       fragmentShader: fragment,
     })
+
+    this.timeline = gsap
+      .timeline()
+      .to(
+        this.material.uniforms.uCorners.value,
+        {
+          x: 1,
+          duration: 1,
+        },
+        0.1
+      )
+      .to(
+        this.material.uniforms.uCorners.value,
+        {
+          y: 1,
+          duration: 1,
+        },
+        0.2
+      )
+      .to(
+        this.material.uniforms.uCorners.value,
+        {
+          z: 1,
+          duration: 1,
+        },
+        0.3
+      )
+      .to(
+        this.material.uniforms.uCorners.value,
+        {
+          w: 1,
+          duration: 1,
+        },
+        0.4
+      )
 
     this.geometry = new THREE.PlaneGeometry(300, 300, 100, 100)
     //  this.geometry = new THREE.SphereGeometry(0.5, 30, 30)
@@ -118,6 +155,10 @@ export default class Sketch {
     this.time += 0.05
     this.material.uniforms.time.value = this.time
     this.material.uniforms.uProgress.value = this.settingsParams.progress
+
+    // set timeline based on progress
+    this.timeline.progress(this.settingsParams.progress)
+
     requestAnimationFrame(this.render.bind(this))
     this.renderer.render(this.scene, this.camera)
   }
