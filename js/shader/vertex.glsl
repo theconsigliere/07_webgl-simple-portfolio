@@ -25,6 +25,9 @@ void main() {
   fullScreenState.x *= uFullscreen.x;
   fullScreenState.y *= uFullscreen.y;
 
+  // the last selected plan needs to be further forward than the others
+  fullScreenState.z += uCorners.x;
+
   // using gsap and the progress value, animate the corners seperately
   // VEC2
     // this works by between 0 - 0.5 of the progress the left side of the screen is scaled up
@@ -46,7 +49,8 @@ void main() {
 
 
 // animate between the default state and the fullscreen state based on the corner progress
-  vec4 finalState = mix(defaultState, fullScreenState, uProgress + waves);
+  //vec4 finalState = mix(defaultState, fullScreenState, uProgress + waves);
+  vec4 finalState = mix(defaultState, fullScreenState, cornersProgress);
 
 // init and send vSize to the fragment shader as varying
  // vSize = mix(uOriginal, uFullscreen, uProgress);
