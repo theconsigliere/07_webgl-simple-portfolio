@@ -4,7 +4,8 @@ import vertex from "./shader/vertex.glsl"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import gui from "lil-gui"
 import gsap from "gsap"
-import image from "../img/texture.jpg"
+import image from "../img/texture-2.jpg"
+import Lenis from "@studio-freight/lenis"
 
 export default class Sketch {
   constructor(options) {
@@ -14,6 +15,8 @@ export default class Sketch {
     this.height = this.container.offsetHeight
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     this.renderer.setPixelRatio(window.devicePixelRatio)
+    this.textureLoader = new THREE.TextureLoader()
+    this.sliderGroup = new THREE.Group()
     // this.renderer.setSize(this.width, this.height)
     // this.renderer.setClearColor(0xeeeeee, 1)
     this.renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -26,6 +29,10 @@ export default class Sketch {
       10,
       1000
     )
+
+    this.scroll = new Lenis({
+      orientation: "horizontal",
+    })
 
     const cameraPosition = 600
     this.camera.position.z = cameraPosition
@@ -47,7 +54,7 @@ export default class Sketch {
     this.settings()
     this.resize()
     this.render()
-    this.setupResize()
+    this.setup()
   }
 
   settings() {
@@ -60,7 +67,7 @@ export default class Sketch {
     this.gui.add(this.material, "wireframe")
   }
 
-  setupResize() {
+  setup() {
     window.addEventListener("resize", this.resize.bind(this))
   }
 
@@ -74,32 +81,92 @@ export default class Sketch {
 
   addObjects() {
     this.material = new THREE.ShaderMaterial({
-      extensions: {
-        derivatives: "#extension GL_OES_standard_derivatives : enable",
-      },
-      side: THREE.DoubleSide,
       wireframe: false,
       uniforms: {
         time: { value: 1.0 },
-        resolution: { value: new THREE.Vector4() },
-        uTexture: { value: new THREE.TextureLoader().load(image) },
-        uProgress: { value: 1.0 },
-        uFullscreen: { value: new THREE.Vector2(this.width, this.height) },
+        uProgress: { value: 0.0 },
+        uTexture: { value: null },
         uTextureSize: { value: new THREE.Vector2(100, 100) },
+        uCorners: { value: new THREE.Vector4(0, 0, 0, 0) },
         uOriginal: { value: new THREE.Vector2(300, 300) },
+        uFullscreen: { value: new THREE.Vector2(this.width, this.height) },
       },
+      side: THREE.DoubleSide,
       vertexShader: vertex,
       fragmentShader: fragment,
     })
 
-    this.geometry = new THREE.PlaneGeometry(300, 300, 100, 100)
-    //  this.geometry = new THREE.SphereGeometry(0.5, 30, 30)
+    this.timeline = gsap
+      .timeline()
+      .to(
+        this.material.uniforms.uCorners.value,
+        {
+          x: 1,
+          duration: 1,
+        },
+        0.1
+      )
+      .to(
+        this.material.uniforms.uCorners.value,
+        {
+          y: 1,
+          duration: 1,
+        },
+        0.2
+      )
+      .to(
+        this.material.uniforms.uCorners.value,
+        {
+          z: 1,
+          duration: 1,
+        },
+        0.3
+      )
+      .to(
+        this.material.uniforms.uCorners.value,
+        {
+          w: 1,
+          duration: 1,
+        },
+        0.4
+      )
 
+    this.geometry = new THREE.PlaneGeometry(1, 1, 100, 100)
     this.mesh = new THREE.Mesh(this.geometry, this.material)
-    this.scene.add(this.mesh)
+    this.mesh.scale.set(300, 300, 1)
+    // this.scene.add(this.mesh)
 
-    this.mesh.position.x = 300
-    this.mesh.rotation.z = 0.5
+    this.mesh.position.x = 0
+
+    // loop over images and create a mesh for each returning key information
+    this.images = [...document.querySelectorAll(".js-image")]
+    this.materials = []
+
+    this.imageStore = this.images.map((img) => {
+      let bounds = img.getBoundingClientRect()
+      let material = this.material.clone()
+      this.materials.push(material)
+
+      let texture = this.textureLoader.load(img.src, function (texture) {
+        texture.needsUpdate = true
+      })
+
+      material.uniforms.uTexture.value = texture
+
+      let mesh = new THREE.Mesh(this.geometry, material)
+      this.scene.add(mesh)
+      mesh.scale.set(bounds.width, bounds.height, 1)
+
+      return {
+        img: img,
+        mesh: mesh,
+        width: bounds.width,
+        height: bounds.height,
+        top: bounds.top,
+        left: bounds.left,
+      }
+    })
+    // this.mesh.rotation.z = 0.5
   }
 
   stop() {
@@ -118,6 +185,10 @@ export default class Sketch {
     this.time += 0.05
     this.material.uniforms.time.value = this.time
     this.material.uniforms.uProgress.value = this.settingsParams.progress
+
+    // set timeline based on progress
+    this.timeline.progress(this.settingsParams.progress)
+
     requestAnimationFrame(this.render.bind(this))
     this.renderer.render(this.scene, this.camera)
   }
